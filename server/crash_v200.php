@@ -169,7 +169,7 @@ while ($reader->read())
 	} else if ($reader->name == "description" && $reader->nodeType == XMLReader::ELEMENT) {
 		$description = mysql_real_escape_string(reading($reader, "description"));
 	} else if ($reader->name == "log" && $reader->nodeType == XMLReader::ELEMENT) {
-		$logdata = mysql_real_escape_string(reading($reader, "log"));
+		$logdata = reading($reader, "log");
 	}
 }
 
@@ -297,8 +297,8 @@ if ($logdata != "" && $version != "" & $applicationname != "" && $bundleidentifi
 	$crash_offset = "";
 	
 	// extract the block which contains the data of the crashing thread
-	preg_match('%Thread [0-9]+ Crashed:\n(.*?)\n\n%s', $logdata, $matches);
-	
+	preg_match('%Thread [0-9]+ Crashed:\n(.*?)\n\n%is', $logdata, $matches);
+
 	//make sure $matches[1] exists
 	if (is_array($matches) && count($matches) >= 2)
 	{
@@ -318,6 +318,7 @@ if ($logdata != "" && $version != "" & $applicationname != "" && $bundleidentifi
 		}
 	}
 
+	
 	// stores the group this crashlog is associated to, by default to none
 	$log_groupid = 0;
 
@@ -402,8 +403,9 @@ if ($logdata != "" && $version != "" & $applicationname != "" && $bundleidentifi
         } else if ($numrows == 0) {
             // create a new pattern for this bug and set amount of occurrances to 1
             $query = "INSERT INTO ".$dbgrouptable." (bundleidentifier, affected, pattern, amount) values ('".$bundleidentifier."', '".$version."', '".$crash_offset."', 1)";
+
             $result = mysql_query($query) or die(xml_for_result(FAILURE_SQL_ADD_PATTERN));
-			
+
 			$log_groupid = mysql_insert_id($link);
 
 			if ($version_status != VERSION_STATUS_DISCONTINUED && $notify == NOTIFY_ACTIVATED)
@@ -440,7 +442,7 @@ if ($logdata != "" && $version != "" & $applicationname != "" && $bundleidentifi
 	if ($version_status != VERSION_STATUS_DISCONTINUED)
 	{
 		// now insert the crashlog into the database
-		$query = "INSERT INTO ".$dbcrashtable." (userid, contact, bundleidentifier, applicationname, systemversion, senderversion, version, description, log, groupid) values ('".$userid."', '".$contact."', '".$bundleidentifier."', '".$applicationname."', '".$systemversion."', '".$senderversion."', '".$version."', '".$description."', '".$logdata."', '".$log_groupid."')";
+		$query = "INSERT INTO ".$dbcrashtable." (userid, contact, bundleidentifier, applicationname, systemversion, senderversion, version, description, log, groupid) values ('".$userid."', '".$contact."', '".$bundleidentifier."', '".$applicationname."', '".$systemversion."', '".$senderversion."', '".$version."', '".$description."', '".mysql_real_escape_string($logdata)."', '".$log_groupid."')";
 		$result = mysql_query($query) or die(xml_for_result(FAILURE_SQL_ADD_CRASHLOG));
 	
 		// if this crash log has to be manually symbolicated, add a todo entry
