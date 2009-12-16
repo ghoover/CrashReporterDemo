@@ -35,7 +35,6 @@
 
 NSString *kCrashReportAnalyzerStarted = @"CrashReportAnalyzerStarted";			// flags if the crashlog analyzer is started. since this may crash we need to track it
 NSString *kCrashReportActivated = @"CrashReportActivated";						// flags if the crashreporter is activated at all
-NSString *kAutomaticallySendCrashReports = @"AutomaticallySendCrashReports";	// flags if the crashreporter should automatically send crashes without asking the user again
 
 @interface CrashReportSender ()
 
@@ -216,7 +215,7 @@ NSString *kAutomaticallySendCrashReports = @"AutomaticallySendCrashReports";	// 
 	} else if ([self hasPendingCrashReport]) {
 		[self unregisterOnline];
         
-		if (![[NSUserDefaults standardUserDefaults] boolForKey:kAutomaticallySendCrashReports]) {
+		if (![[NSUserDefaults standardUserDefaults] boolForKey: kAutomaticallySendCrashReports]) {
 			UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"CrashDataFoundTitle", @"Title showing in the alert box when crash report data has been found")
 																message:NSLocalizedString(@"CrashDataFoundDescription", @"Description explaining that crash data has been found and ask the user if the data might be uplaoded to the developers server")
 															   delegate:self
@@ -346,7 +345,7 @@ NSString *kAutomaticallySendCrashReports = @"AutomaticallySendCrashReports";	// 
 		elementName = qName;
 	}
 	
-	if ([elementName isEqualToString:@"result"]) {
+	if ([elementName isEqualToString: @"result"]) {
 		if ([_contentOfProperty intValue] > _serverResult) {
 			_serverResult = [_contentOfProperty intValue];
 		} else {
@@ -506,6 +505,12 @@ NSString *kAutomaticallySendCrashReports = @"AutomaticallySendCrashReports";	// 
 	}
 	
 	[xmlString appendString:@"\n"];
+
+	if (report.hasExceptionInfo) {
+		[xmlString appendString:@"Application Specific Information:\n"];
+		[xmlString appendFormat: @"*** Terminating app due to uncaught exception '%@', reason: '%@'", report.exceptionInfo.exceptionName, report.exceptionInfo.exceptionReason];
+		[xmlString appendString:@"\n\n"];
+	}
 	
 	/* Threads */
 	for (PLCrashReportThreadInfo *thread in report.threads) {
